@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+  <body class="bg-slate-100">
+    <div id="app">
+      <div
+        class="flex flex-wrap items-end justify-center gap-8 md:w-2/7 lg:w-2/7 xl:w-2/5 2xl:w-2/5 py-10 mt-5 mx-auto border bg-white shadow-xl rounded-xl"
+      >
+        <div v-for="item in items" :class="item.class">
+          <span
+            v-show="item.count"
+            class="flex justify-center items-center bg-pink-600 w-full text-white text-xl font-bold"
+            >Bet x{{ item.count }}</span
+          >
+          <img
+            @click="bet(item.id)"
+            :src="item.image"
+            class="w-52 h-48 p-1 cursor-pointer"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-center py-4">
+        <button
+          type="button"
+          class="text-lg border-2 border-pink-600 rounded-lg px-8 py-2 text-red-600 cursor-pointer hover:bg-pink-600 hover:text-red-200 transition duration-200 ease-linear"
+          @click="game()"
+        >
+          {{isPlaying ? "Stop" : "Start"}}
+        </button>
+      </div>
+
+      <div
+        class="flex flex-wrap items-end justify-center gap-4 md:w-2/7 lg:w-2/5 py-10 mx-auto border bg-white shadow-xl rounded-xl"
+      >
+        <div v-for="item in result">
+          <img v-show="item.image" :src="item.image" class="w-52 h-48 p-1" />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+
+      const app = createApp({
+        data() {
+          return {
+            items: [
+              {
+                id: 1,
+                name: "kla",
+                count: 0,
+                image: "/src/klaklok/1.jpg",
+                class:
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
+              },
+              {
+                id: 2,
+                name: "klouk",
+                count: 0,
+                image: "/src/klaklok/2.jpg",
+                class:
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
+              },
+              {
+                id: 3,
+                name: "moun",
+                count: 0,
+                image: "/src/klaklok/3.jpg",
+                class:
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
+              },
+              {
+                id: 4,
+                name: "bongkorng",
+                count: 0,
+                image: "/src/klaklok/4.jpg",
+                class:
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
+              },
+              {
+                id: 5,
+                name: "kdam",
+                count: 0,
+                image: "/src/klaklok/5.jpg",
+                class:
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
+              },
+              {
+                id: 6,
+                name: "trey",
+                count: 0,
+                image: "/src/klaklok/6.jpg",
+                class:
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
+              },
+            ],
+            intervalId: null,
+            result: [], 
+            isPlaying: false,
+            audio : new Audio('/src/klaklok/sound/music.mp3'),
+          };
+        },
+        methods: {
+          bet(id) {
+            this.items.forEach((item) => {
+              let clickAudio = new Audio('/src/klaklok/sound/click.mp3')
+              clickAudio.volume = 0.5;
+              clickAudio.play();
+              if (item.id === id) {
+                item.count++;
+              }
+            });
+          },
+          game() {
+            if (this.isPlaying) {
+              this.stopGame();
+            } else {
+              if (this.items.some((item) => item.count > 0)) {
+                this.startGame();
+              } else {
+                Swal.fire({
+                  icon: "error",
+                  title: "You have to bet first",
+                  text: "Bet First!",
+                });
+              }
+            }
+          },
+          startGame() {
+            this.isPlaying = true;
+            this.result = []; // Reset the result array
+            this.audio.play()
+
+            this.intervalId = setInterval(() => {
+              this.items.forEach((item) => {
+                item.class =
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-sm overflow-hidden";
+              });
+
+              const randomIndex = Math.floor(Math.random() * this.items.length);
+              this.items[randomIndex].class =
+                "flex flex-col items-center bg-lime-700 rounded-sm overflow-hidden";
+            }, 100);
+          },
+          stopGame() {
+            clearInterval(this.intervalId);
+            this.isPlaying = false;
+            this.audio.pause();
+            this.audio.currentTime = 0; 
+
+            // Reset item classes before the promise
+            this.items.forEach((item) => {
+              item.class =
+                "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-sm overflow-hidden";
+            });
+
+            let tempResult = [];
+            while (tempResult.length < 3) {
+              const randomIndex = Math.floor(Math.random() * 6) + 1;
+              if (!tempResult.includes(randomIndex)) {
+                tempResult.push(randomIndex);
+              }
+            }
+
+            this.result = [];
+
+            let highlightIndex = 0;
+
+            const highlightPromise = new Promise((resolve) => {
+              const highlightInterval = setInterval(() => {
+                if (highlightIndex < tempResult.length) {
+                  const index = tempResult[highlightIndex] - 1;
+                  this.items[index].class =
+                    "flex flex-col items-center bg-lime-700 rounded-sm overflow-hidden";
+                  this.result.push({
+                    id: this.items[index].id,
+                    image: this.items[index].image,
+                  });
+                  let clickAudio = new Audio('/src/klaklok/sound/success.mp3')
+                  clickAudio.volume = 0.5;
+                  clickAudio.play();
+                  highlightIndex++;
+                } else {
+                  clearInterval(highlightInterval);
+                  resolve(); // Resolve the promise once highlighting is done
+                }
+              }, 500);
+            });
+
+            highlightPromise.then(() => {
+              let hasWinningBet = false;
+
+              this.items.forEach((item) => {
+                if (item.count > 0) {
+                  if (this.result.some((result) => result.id === item.id)) {
+                    // Winning bet
+                    let names = "";
+                    this.result.forEach((result) => {
+                      names += " "+ this.items[result.id - 1].count+"x " + this.items[result.id - 1].name + ","; // Concatenate names into a string
+                    });
+                    console.log(names);
+
+                    hasWinningBet = true;
+                    Swal.fire({
+                      icon: "success",
+                      title: "Congratulations!",
+                      text: "You have a winning bet!" + names,
+                    });
+                    let clickAudio = new Audio('/src/klaklok/sound/success.mp3')
+                    clickAudio.volume = 0.5;
+                    clickAudio.play();
+                  }
+                }
+              });
+
+              // Check for wrong guesses if no winning bet was found
+              if (!hasWinningBet) {
+                Swal.fire({
+                  icon: "error",
+                  title: "Sorry. Try Again!",
+                  text: "You lose!",
+                });
+                let clickAudio = new Audio('/src/klaklok/sound/error.mp3')
+                clickAudio.volume = 0.5;
+                clickAudio.play();
+              }
+
+              // Reset item counts and classes after promise is resolved
+              this.items.forEach((item) => {
+                item.count = 0;
+                item.class =
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-sm overflow-hidden";
+              });
+            });
+          },
+        },
+      });
+
+      app.mount("#app");
+    </script>
+  </body>
+</html>
