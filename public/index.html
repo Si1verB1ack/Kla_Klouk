@@ -48,7 +48,7 @@
           >Result</span
         >
         <div
-          class="flex flex-wrap justify-center items-center w-full mx-5 gap-2 px-4 sm:px-5 border bg-pink-100 border-pink-300 rounded-lg min-h-[200px]"
+          class="flex flex-wrap justify-center items-center w-full mx-5 gap-5 px-4 sm:px-5 border bg-pink-100 border-pink-300 rounded-lg min-h-[200px]"
         >
           <div v-for="item in result" class="flex-shrink-0">
             <img v-show="item.image" :src="item.image" class="w-52 h-48 p-1" />
@@ -122,11 +122,11 @@
         methods: {
           bet(id) {
             this.items.forEach((item) => {
-              let clickAudio = new Audio("/src/klaklok/sound/click.mp3");
-              clickAudio.volume = 0.5;
-              clickAudio.play();
               if (item.id === id) {
                 item.count++;
+                let clickAudio = new Audio("/src/klaklok/sound/click.mp3");
+                clickAudio.volume = 0.5;
+                clickAudio.play();
               }
             });
           },
