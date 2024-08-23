@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,12 +7,16 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
-  <body class="bg-slate-100">
-    <div id="app">
+  <body class="bg-slate-200">
+    <div id="app" class="px-4">
       <div
-        class="flex flex-wrap items-end justify-center gap-8 md:w-2/7 lg:w-2/7 xl:w-2/5 2xl:w-2/5 py-10 mt-5 mx-auto border bg-white shadow-xl rounded-xl"
+        class="flex flex-wrap items-end justify-center gap-5 py-5 mt-5 mx-auto border bg-white shadow-xl rounded-xl w-full max-w-screen-md"
       >
-        <div v-for="item in items" :class="item.class">
+        <div
+          v-for="item in items"
+          :class="item.class"
+          class="flex flex-col items-center"
+        >
           <span
             v-show="item.count"
             class="flex justify-center items-center bg-pink-600 w-full text-white text-xl font-bold"
@@ -32,15 +36,23 @@
           class="text-lg border-2 border-pink-600 rounded-lg px-8 py-2 text-red-600 cursor-pointer hover:bg-pink-600 hover:text-red-200 transition duration-200 ease-linear"
           @click="game()"
         >
-          {{isPlaying ? "Stop" : "Start"}}
+          {{ isPlaying ? "Stop" : "Start" }}
         </button>
       </div>
 
       <div
-        class="flex flex-wrap items-end justify-center gap-4 md:w-2/7 lg:w-2/5 py-10 mx-auto border bg-white shadow-xl rounded-xl"
+        class="flex flex-wrap items-end justify-center gap-5 py-5 mx-auto border bg-white shadow-xl rounded-xl w-full max-w-screen-md"
       >
-        <div v-for="item in result">
-          <img v-show="item.image" :src="item.image" class="w-52 h-48 p-1" />
+        <span
+          class="flex w-full justify-center text-xl font-semibold text-gray-700"
+          >Result</span
+        >
+        <div
+          class="flex flex-wrap justify-center items-center w-full mx-5 gap-2 px-4 sm:px-5 border bg-pink-100 border-pink-300 rounded-lg min-h-[200px]"
+        >
+          <div v-for="item in result" class="flex-shrink-0">
+            <img v-show="item.image" :src="item.image" class="w-52 h-48 p-1" />
+          </div>
         </div>
       </div>
     </div>
@@ -102,15 +114,15 @@
               },
             ],
             intervalId: null,
-            result: [], 
+            result: [],
             isPlaying: false,
-            audio : new Audio('/src/klaklok/sound/music.mp3'),
+            audio: new Audio("/src/klaklok/sound/music.mp3"),
           };
         },
         methods: {
           bet(id) {
             this.items.forEach((item) => {
-              let clickAudio = new Audio('/src/klaklok/sound/click.mp3')
+              let clickAudio = new Audio("/src/klaklok/sound/click.mp3");
               clickAudio.volume = 0.5;
               clickAudio.play();
               if (item.id === id) {
@@ -135,38 +147,50 @@
           },
           startGame() {
             this.isPlaying = true;
-            this.result = []; // Reset the result array
-            this.audio.play()
+            this.result = [];
+            this.audio.play();
 
             this.intervalId = setInterval(() => {
               this.items.forEach((item) => {
                 item.class =
-                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-sm overflow-hidden";
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden";
               });
 
-              const randomIndex = Math.floor(Math.random() * this.items.length);
-              this.items[randomIndex].class =
-                "flex flex-col items-center bg-lime-700 rounded-sm overflow-hidden";
+              this.result = [];
+              for (let i = 0; i < 3; i++) {
+                const randomIndex = Math.floor(
+                  Math.random() * this.items.length
+                );
+                const item = this.items[randomIndex];
+                this.result.push({
+                  id: item.id,
+                  image: item.image,
+                });
+              }
+
+              const randomHighlightIndex = Math.floor(
+                Math.random() * this.items.length
+              );
+              this.items[randomHighlightIndex].class =
+                "flex flex-col items-center bg-lime-700 rounded-lg overflow-hidden";
             }, 100);
           },
           stopGame() {
             clearInterval(this.intervalId);
             this.isPlaying = false;
             this.audio.pause();
-            this.audio.currentTime = 0; 
+            this.audio.currentTime = 0;
 
             // Reset item classes before the promise
             this.items.forEach((item) => {
               item.class =
-                "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-sm overflow-hidden";
+                "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden";
             });
 
             let tempResult = [];
             while (tempResult.length < 3) {
               const randomIndex = Math.floor(Math.random() * 6) + 1;
-              if (!tempResult.includes(randomIndex)) {
-                tempResult.push(randomIndex);
-              }
+              tempResult.push(randomIndex);
             }
 
             this.result = [];
@@ -178,12 +202,12 @@
                 if (highlightIndex < tempResult.length) {
                   const index = tempResult[highlightIndex] - 1;
                   this.items[index].class =
-                    "flex flex-col items-center bg-lime-700 rounded-sm overflow-hidden";
+                    "flex flex-col items-center bg-lime-700 rounded-lg overflow-hidden";
                   this.result.push({
                     id: this.items[index].id,
                     image: this.items[index].image,
                   });
-                  let clickAudio = new Audio('/src/klaklok/sound/success.mp3')
+                  let clickAudio = new Audio("/src/klaklok/sound/success.mp3");
                   clickAudio.volume = 0.5;
                   clickAudio.play();
                   highlightIndex++;
@@ -201,10 +225,26 @@
                 if (item.count > 0) {
                   if (this.result.some((result) => result.id === item.id)) {
                     // Winning bet
-                    let names = "";
+                    // Create an object to aggregate counts of winning bets
+                    const countObj = {};
+
                     this.result.forEach((result) => {
-                      names += " "+ this.items[result.id - 1].count+"x " + this.items[result.id - 1].name + ","; // Concatenate names into a string
+                      const itemId = result.id;
+                      if (this.items[itemId - 1].count > 0) {
+                        if (countObj[itemId]) {
+                          countObj[itemId]++;
+                        } else {
+                          countObj[itemId] = 1;
+                        }
+                      }
                     });
+
+                    // Build the names string based on aggregated data
+                    let names = "";
+                    for (const [id, count] of Object.entries(countObj)) {
+                      names += ` ${count}x ${this.items[id - 1].name} `;
+                    }
+
                     console.log(names);
 
                     hasWinningBet = true;
@@ -213,30 +253,29 @@
                       title: "Congratulations!",
                       text: "You have a winning bet!" + names,
                     });
-                    let clickAudio = new Audio('/src/klaklok/sound/success.mp3')
+                    let clickAudio = new Audio(
+                      "/src/klaklok/sound/success.mp3"
+                    );
                     clickAudio.volume = 0.5;
                     clickAudio.play();
                   }
                 }
               });
 
-              // Check for wrong guesses if no winning bet was found
               if (!hasWinningBet) {
                 Swal.fire({
                   icon: "error",
-                  title: "Sorry. Try Again!",
-                  text: "You lose!",
+                  title: "No winning bet!",
+                  text: "Better luck next time.",
                 });
-                let clickAudio = new Audio('/src/klaklok/sound/error.mp3')
+                let clickAudio = new Audio("/src/klaklok/sound/failure.mp3");
                 clickAudio.volume = 0.5;
                 clickAudio.play();
               }
-
-              // Reset item counts and classes after promise is resolved
               this.items.forEach((item) => {
                 item.count = 0;
                 item.class =
-                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-sm overflow-hidden";
+                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden";
               });
             });
           },
