@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="public/style.css" />
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
@@ -30,13 +30,21 @@
         </div>
       </div>
 
-      <div class="flex justify-center py-4">
+      <div class="flex justify-center py-4 gap-4">
         <button
           type="button"
           class="text-lg border-2 border-pink-600 rounded-lg px-8 py-2 text-red-600 cursor-pointer hover:bg-pink-600 hover:text-red-200 transition duration-200 ease-linear"
           @click="game()"
         >
           {{ isPlaying ? "Stop" : "Start" }}
+        </button>
+        <button
+          v-show="!isPlaying"
+          type="button"
+          class="text-lg border-2 border-pink-600 rounded-lg px-8 py-2 text-red-600 cursor-pointer hover:bg-pink-600 hover:text-red-200 transition duration-200 ease-linear"
+          @click="clear()"
+        >
+          Clear
         </button>
       </div>
 
@@ -68,7 +76,7 @@
                 id: 1,
                 name: "kla",
                 count: 0,
-                image: "/src/klaklok/1.jpg",
+                image: "src/klaklok/1.jpg",
                 class:
                   "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
               },
@@ -76,7 +84,7 @@
                 id: 2,
                 name: "klouk",
                 count: 0,
-                image: "/src/klaklok/2.jpg",
+                image: "src/klaklok/2.jpg",
                 class:
                   "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
               },
@@ -84,7 +92,7 @@
                 id: 3,
                 name: "moun",
                 count: 0,
-                image: "/src/klaklok/3.jpg",
+                image: "src/klaklok/3.jpg",
                 class:
                   "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
               },
@@ -92,7 +100,7 @@
                 id: 4,
                 name: "bongkorng",
                 count: 0,
-                image: "/src/klaklok/4.jpg",
+                image: "src/klaklok/4.jpg",
                 class:
                   "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
               },
@@ -100,7 +108,7 @@
                 id: 5,
                 name: "kdam",
                 count: 0,
-                image: "/src/klaklok/5.jpg",
+                image: "src/klaklok/5.jpg",
                 class:
                   "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
               },
@@ -108,7 +116,7 @@
                 id: 6,
                 name: "trey",
                 count: 0,
-                image: "/src/klaklok/6.jpg",
+                image: "src/klaklok/6.jpg",
                 class:
                   "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden",
               },
@@ -116,7 +124,7 @@
             intervalId: null,
             result: [],
             isPlaying: false,
-            audio: new Audio("/src/klaklok/sound/music.mp3"),
+            audio: new Audio("src/klaklok/sound/music.mp3"),
           };
         },
         methods: {
@@ -124,10 +132,17 @@
             this.items.forEach((item) => {
               if (item.id === id) {
                 item.count++;
-                let clickAudio = new Audio("/src/klaklok/sound/click.mp3");
+                let clickAudio = new Audio("src/klaklok/sound/click.mp3");
                 clickAudio.volume = 0.5;
                 clickAudio.play();
               }
+            });
+          },
+          clear() {
+            this.items.forEach((item) => {
+              item.count = 0;
+              item.class =
+                "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden";
             });
           },
           game() {
@@ -181,22 +196,36 @@
             this.audio.pause();
             this.audio.currentTime = 0;
 
-            // Reset item classes before the promise
+            // Reset all item classes
             this.items.forEach((item) => {
               item.class =
                 "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden";
             });
 
+            // Temporary result storage
             let tempResult = [];
-            while (tempResult.length < 3) {
-              const randomIndex = Math.floor(Math.random() * 6) + 1;
-              tempResult.push(randomIndex);
+            const userBets = this.items.filter((item) => item.count > 0);
+            const nonBets = this.items.filter((item) => item.count === 0);
+
+            // Generate random results
+            const randomChance = Math.random() * 100;
+            if (randomChance < 20 && nonBets.length > 0) {
+              while (tempResult.length < 3) {
+                const randomIndex = Math.floor(Math.random() * nonBets.length);
+                tempResult.push(nonBets[randomIndex].id);
+              }
+            } else {
+              while (tempResult.length < 3) {
+                const randomIndex = Math.floor(Math.random() * 6) + 1;
+                tempResult.push(randomIndex);
+              }
             }
 
+            // Reset result display
             this.result = [];
-
             let highlightIndex = 0;
 
+            // Highlight results one by one
             const highlightPromise = new Promise((resolve) => {
               const highlightInterval = setInterval(() => {
                 if (highlightIndex < tempResult.length) {
@@ -207,76 +236,57 @@
                     id: this.items[index].id,
                     image: this.items[index].image,
                   });
-                  let clickAudio = new Audio("/src/klaklok/sound/success.mp3");
+                  let clickAudio = new Audio("src/klaklok/sound/success.mp3");
                   clickAudio.volume = 0.5;
                   clickAudio.play();
                   highlightIndex++;
                 } else {
                   clearInterval(highlightInterval);
-                  resolve(); // Resolve the promise once highlighting is done
+                  resolve();
                 }
               }, 500);
             });
 
+            // After results are highlighted
             highlightPromise.then(() => {
               let hasWinningBet = false;
+              let names = "";
 
+              // Check if any of the user's bets match the result
               this.items.forEach((item) => {
                 if (item.count > 0) {
-                  if (this.result.some((result) => result.id === item.id)) {
-                    // Winning bet
-                    // Create an object to aggregate counts of winning bets
-                    const countObj = {};
+                  let matchCount = this.result.filter(
+                    (result) => result.id === item.id
+                  ).length;
 
-                    this.result.forEach((result) => {
-                      const itemId = result.id;
-                      if (this.items[itemId - 1].count > 0) {
-                        if (countObj[itemId]) {
-                          countObj[itemId]++;
-                        } else {
-                          countObj[itemId] = 1;
-                        }
-                      }
-                    });
-
-                    // Build the names string based on aggregated data
-                    let names = "";
-                    for (const [id, count] of Object.entries(countObj)) {
-                      names += ` ${count}x ${this.items[id - 1].name} `;
-                    }
-
-                    console.log(names);
-
+                  // If there are matches, display the item name with the bet count
+                  if (matchCount > 0) {
                     hasWinningBet = true;
-                    Swal.fire({
-                      icon: "success",
-                      title: "Congratulations!",
-                      text: "You have a winning bet!" + names,
-                    });
-                    let clickAudio = new Audio(
-                      "/src/klaklok/sound/success.mp3"
-                    );
-                    clickAudio.volume = 0.5;
-                    clickAudio.play();
+                    names += ` ${item.name} x${item.count}`;
                   }
                 }
               });
 
-              if (!hasWinningBet) {
+              // Show winning or losing message
+              if (hasWinningBet) {
+                Swal.fire({
+                  icon: "success",
+                  title: "Congratulations!",
+                  text: `You have a winning bet!${names}`,
+                });
+                let successAudio = new Audio("src/klaklok/sound/success.mp3");
+                successAudio.volume = 0.5;
+                successAudio.play();
+              } else {
                 Swal.fire({
                   icon: "error",
                   title: "No winning bet!",
                   text: "Better luck next time.",
                 });
-                let clickAudio = new Audio("/src/klaklok/sound/failure.mp3");
-                clickAudio.volume = 0.5;
-                clickAudio.play();
+                let failureAudio = new Audio("src/klaklok/sound/failure.mp3");
+                failureAudio.volume = 0.5;
+                failureAudio.play();
               }
-              this.items.forEach((item) => {
-                item.count = 0;
-                item.class =
-                  "flex flex-col items-center bg-pink-400 hover:bg-pink-600 rounded-lg overflow-hidden";
-              });
             });
           },
         },
